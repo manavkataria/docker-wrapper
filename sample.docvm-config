@@ -1,4 +1,4 @@
-DOCKER_IMAGE="manavkataria/lincdev"
+DOCKER_IMAGE="docker-username/docker-repo"
 
 DEFAULTDIR="."
 B2DVERSION="1.7.1" 
