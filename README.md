@@ -19,4 +19,4 @@ Usage: ./docvm [options]
 1. **Download**: [_.docvm-config_](https://github.com/manavkataria/docker-wrapper/blob/master/sample.docvm-config) and save-as `~/.docvm-config`
 2. **Download**: [_docvm_](https://github.com/manavkataria/docker-wrapper/blob/master/docvm) and save-as `/usr/local/bin/docvm` 
 3. **Mark as Executable**: chmod +x `/usr/local/bin/docvm`
-4. **Execute**: _docvm_ in a new directory where you want to setup the dev environment
+4. **Execute**: _docvm_ in a **new directory** where you want to setup the dev environment
