@@ -1,0 +1,389 @@
+#!/bin/bash
+# Docker Initialization Script for Linc
+
+# TODO: 
+# Use Variable Instead of hardcoding DOCKER_IMAGE
+# Add hosts -> http://192.168.59.103:8000
+# Django Debug ability
+# git clone recursive
+
+SCRIPT_VERSION="2.0.5"
+CONFIG_PATH="$HOME/.docvm-config"
+
+
+function version {
+	print "Version: $SCRIPT_VERSION\n"
+}
+
+
+function load_config {
+	source $CONFIG_PATH || print "Fatal: Unable to Load Config!\n" exit 1
+}
+
+
+function bashinit {
+	print "Config $HOME/.bash_profile to enable docker commands\n"
+
+	echo "" >> $HOME/.bash_profile || print "Failed! \n" exit 1
+	echo "# Initialize Boot2Docker Shell Commands" >> $HOME/.bash_profile || print "Failed! \n" exit 1
+	echo "eval \$(boot2docker shellinit 2> /dev/null)" >> $HOME/.bash_profile && print "Done!\n"
+}
+
+
+# Utility Functions
+function print {
+	RED='\033[0;31m'
+	NC='\033[0m' # No Color
+
+	HEAD="[${RED}$HEADER${NC}]"
+
+	printf "$HEAD $@"
+}
+
+
+function watch {
+	print "watch"
+
+	out=`$@`
+
+	echo "Out: $out"
+	echo "CMD: $1"
+
+	while [ "$out" == "0" ] ; 
+	  do 
+	  echo $1
+	  sleep 1; 
+	done
+}
+
+
+function monitor {
+	print "TODO: Implement Monitor \n" 
+	# watch /usr/bin/tail /Users/kataria/workspace/docker/test/django.log | /usr/bin/grep 'gensim.utils' | /usr/bin/wc -l
+	# output=$(/usr/bin/tail /Users/kataria/workspace/docker/test/django.log | /usr/bin/grep 'gensim.utils' | /usr/bin/wc -l)
+	# echo "Output: $output"
+}
+
+
+
+function usage {
+	echo "Usage: lincvm [options]"
+	echo "    NO_OPTION    Setup linc environment in current directory <$GITREPO_ROOTDIR.git>"
+	echo "    help         Display this usage information"
+	echo "    kill         Stop and remove 'dev' container"
+	echo "    run          Run linc's django server"
+	echo "    shell        Open interactive shell on 'dev' container"
+	echo "    bashinit     Setup $HOME/.bash_profile to enable docker commands"
+	echo "    uninstall    Uninstall 'boot2docker' and 'docker'"
+	echo "    version      Display script version"
+	exit 1
+}
+
+
+function help {
+	usage
+}
+
+function check_numargs {
+
+	if [ "$#" -eq 1 ] 
+		then
+			return 1
+		else
+			print "Invalid Number of Arguments!\n"
+			usage
+			return 0
+	fi
+}
+
+
+function is_dir {
+
+	if [ -d "$1" ] 
+		then
+			echo "1"
+		else		
+			echo "0"
+	fi
+}
+
+
+function is_argdir {
+
+	if [ -d "$1" ] 
+		then
+			return 1
+		else
+			print "Invalid Directory: '$1'\n"
+			usage
+			return 0
+	fi
+}
+
+
+function gitclone {
+	# Clone: GIT Repo
+
+	found_repo=$(is_dir "$1/$GITREPO_ROOTDIR")
+
+	if [ $found_repo == '1' ]
+		then 
+		print "Found: $1/$GITREPO_ROOTDIR (git repo) \n"
+	else
+		print "Creating Repo: $1/$GITREPO_ROOTDIR \n"
+		cd $1
+		git clone $GITREPO
+
+		# Submodule:
+		print "Creating Repo Submodule: $1/$GITREPO_SUBMODULE_ROOTDIR \n"
+
+		# FIXME: 
+		# cd $1/$GITREPO_ROOTDIR
+		# git submodule init
+		# git submodule update 
+		## Fails with:
+		## Permission denied (publickey).
+		## fatal: Could not read from remote repository.
+		##
+		# WORKAROUND: cd $1/$GITREPO_SUBMODULE_ROOTDIR
+		git clone $GITREPO_SUBMODULE $1/$GITREPO_SUBMODULE_ROOTDIR
+
+	fi
+
+}
+
+
+function get_boot2docker {
+
+	if [ ! -f "/tmp/Boot2Docker-$B2DVERSION.pkg" ]
+	then
+		print "Downloading boot2docker-$B2DVERSION ... \n"
+		curl -L https://github.com/boot2docker/osx-installer/releases/download/v$B2DVERSION/Boot2Docker-$B2DVERSION.pkg -o /tmp/Boot2Docker-$B2DVERSION.pkg || exit 1
+		print "Done!\n"
+	else
+		print "Found: /tmp/Boot2Docker-$B2DVERSION.pkg\n"
+	fi
+}
+
+
+function install_boot2docker {
+	# Install boot2docker 1.6.2
+	b2d_version="$(boot2docker version 2> /dev/null)"
+
+	if [ ! -z "$b2d_version" ]
+	then
+		print "Found: 'boot2docker' installed\n"
+	else 
+		print "Installing boot2docker ... \n"
+		sudo installer -pkg /tmp/Boot2Docker-$B2DVERSION.pkg -target / || exit 1
+		print "Done!\n"
+	fi
+}
+
+
+function run_boot2docker {
+
+	b2d_status=$(boot2docker status 2> /dev/null) 
+
+	if [ "$b2d_status" == "running" ]
+	then
+		print "Found: 'boot2docker' running\n"
+	else
+		print "Initializing boot2docker ...\n"
+		boot2docker init || exit 1
+		boot2docker up || exit 1
+		eval "$(boot2docker shellinit)" || exit 1
+		print "Done!\n"
+	fi
+
+}
+
+
+function init_docker {
+	is_image_local=$(docker images | grep manavkataria/lincdev | wc -l)
+
+	if [ "$is_image_local" -eq 1 ]
+	then
+		print "Found: 'manavkataria/lincdev' image\n"
+	else
+		print "Fetching 'manavkataria/lincdev' docker image ... \n"
+		echo -n "Docker "
+		docker login
+		docker pull manavkataria/lincdev || exit 1
+		print "Done!\n"
+	fi
+
+}
+
+function init_boot2docker {
+	
+	get_boot2docker	
+
+	install_boot2docker	
+
+	run_boot2docker
+
+	return 1
+}
+
+
+function is_running {
+	echo $(docker ps | grep manavkataria/lincdev | wc -l)
+}
+
+
+function is_in_psa {
+	echo $(docker ps -a | grep manavkataria/lincdev | wc -l)
+}
+
+
+function is_stopped {
+	# Returns 1 only if container is strictly in STOPPED/EXITED state
+	if [ $(is_running) -eq 0 ] && [ $(is_in_psa) -eq 1 ]
+	then
+		echo "1"
+	else 
+		echo "-1" # Unknown
+	fi
+}
+
+
+function run {
+	
+	if [ $(is_running) -eq 1 ]
+	then 
+		print "Found: Server Running\n"
+	elif [ $(is_stopped) -eq 1 ]; then
+		print "Restarting Server ...\n"
+		start && attach
+		print "Done!\n"
+	else
+		# Rerun Server
+		print "Running Server ...\n"
+		cd $1
+		docker run --name dev \
+			-v $PWD:/Proximiant/workspace \
+			-p 8000:8000 \
+			--expose 8000 \
+			-itd manavkataria/lincdev \
+			/bin/bash -c 'source /Proximiant/env/docker-entrypoint.sh && cd /Proximiant/workspace/$GITREPO_ROOTDIR/apps && python /Proximiant/workspace/$GITREPO_ROOTDIR/apps/manage.py runserver 0.0.0.0:8000 &>> /Proximiant/workspace/django.log'
+			print "Done!\n"
+	fi
+}
+
+
+function shell {
+	
+	if [ $(is_running) -eq 1 ]
+	then 
+		print "Found: Server Running\n"
+	elif [ $(is_stopped) -eq 1 ]; then
+		print "Restarting Server ...\n"
+		start && attach
+		print "Done!\n"
+	else
+		# Rerun Server
+		cd $1
+		print "Running Server ($PWD) ...\n"
+		docker run --name dev \
+			-v $PWD:/Proximiant/workspace \
+			-p 8000:8000 \
+			--expose 8000 \
+			-it $DOCKER_IMAGE \
+			/bin/bash
+	fi
+}
+
+
+function uninstall_boot2docker {
+	# uninstalls Boot2Docker (not virtual box, or directory cleanup)
+	boot2docker delete &> /dev/null
+	curl -L https://raw.githubusercontent.com/boot2docker/osx-installer/master/uninstall.sh -o /tmp/boot2docker-uninstall.sh &> /dev/null
+	chmod +x /tmp/boot2docker-uninstall.sh
+	sudo /tmp/boot2docker-uninstall.sh 2> /dev/null
+}
+
+
+function uninstall {
+	print "Uninstalling Linc Dev Environment ... \n"
+	uninstall_boot2docker
+	# /bin/rm -ri $DEFAULTDIR
+}
+
+
+function what_next {
+	print "Access Server at URL: $SERVER_URL \n"
+}
+
+
+# Docker Wrapper Functions
+function start {
+	docker start dev
+}
+
+function attach {
+	docker attach dev
+}
+
+function stop {
+	docker stop dev
+}
+
+function rm {
+	docker rm dev
+}
+
+function kill {
+	stop && rm
+}
+
+
+function init {
+	check_numargs "$@"
+	is_argdir "$@"
+
+	gitclone "$@"
+
+	init_boot2docker
+	init_docker
+
+	run "$@"
+
+	print "Initialization Complete! \n"
+
+	what_next
+
+	exit 0
+}
+
+
+function shellinit-volatile {
+	if hash boot2docker 2>/dev/null
+	then
+		eval $(boot2docker shellinit 2>/dev/null) || \
+		print "WARN: 'boot2docker' shellinit Failed! \n"
+	else
+		print "INFO: 'boot2docker' Not Found! \n"
+	fi
+	# TODO: Send Feedback Message to User
+}
+
+
+function main {
+	load_config
+	shellinit-volatile
+
+	if [ "$#" -eq 0 ]
+	then
+		version
+		print "Using Default Directory: $DEFAULTDIR \n"
+		mkdir -p $DEFAULTDIR
+		init $DEFAULTDIR
+	else
+		# Access Script Funtions
+		"$@"
+	fi
+}
+
+
+main "$@"

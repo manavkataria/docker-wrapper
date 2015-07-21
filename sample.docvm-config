@@ -1,0 +1,15 @@
+DOCKER_IMAGE="manavkataria/lincdev"
+
+DEFAULTDIR="."
+B2DVERSION="1.7.1" 
+
+GITREPO="https://github.com/path-to/repo.git"
+GITREPO_ROOTDIR="repo"
+
+GITREPO_SUBMODULE="https://github.com/path-to/submodule-repo.git"
+GITREPO_SUBMODULE_ROOTDIR="$GITREPO_ROOTDIR/path/to/submodule"
+
+BOOT2DOCKER_IP=$(boot2docker ip)
+PORT=8000
+
+SERVER_URL="http://$BOOT2DOCKER_IP:$PORT/"
