@@ -1,4 +1,6 @@
+HEADER="DOCVM"
 DOCKER_IMAGE="docker-username/docker-repo"
+CONTAINER_DIR="/workspace"
 
 DEFAULTDIR="."
 B2DVERSION="1.7.1" 
