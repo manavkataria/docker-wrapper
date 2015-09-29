@@ -3,12 +3,13 @@
 
 # TODO: 
 # Use Variable Instead of hardcoding DOCKER_IMAGE
+# Auto --rm/--stop <container> on docker run
 # Add hosts -> http://192.168.59.103:8000
 # Django Debug ability
 # git clone recursive
 # TODO: Fix run and make it Generic
 
-SCRIPT_VERSION="2.1.5"
+SCRIPT_VERSION="2.6.5"
 CONFIG_PATH="./.docvm-config"
 
 
@@ -282,7 +283,7 @@ function run {
 			-p 8000:8000 \
 			--expose 8000 \
 			-itd $DOCKER_IMAGE \
-			/bin/bash -c 'source /Proximiant/env/docker-entrypoint.sh && cd /Proximiant/workspace/$GITREPO_ROOTDIR/apps && python /Proximiant/workspace/$GITREPO_ROOTDIR/apps/manage.py runserver 0.0.0.0:8000 &>> /Proximiant/workspace/django.log'
+			#/bin/bash -c 'source /Proximiant/env/docker-entrypoint.sh && cd /Proximiant/workspace/$GITREPO_ROOTDIR/apps && python /Proximiant/workspace/$GITREPO_ROOTDIR/apps/manage.py runserver 0.0.0.0:8000 &>> /Proximiant/workspace/django.log'
 			print "Done!\n"
 	fi
 }

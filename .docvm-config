@@ -1,0 +1,31 @@
+HEADER="LINC"
+DOCKER_IMAGE="linc/django:devdb"
+CONTAINER_DIR="/Proximiant"
+
+DEFAULTDIR="."
+B2DVERSION="1.7.1" 
+
+GITREPO="https://github.com/Proximiant/prox2.git"
+GITREPO_ROOTDIR="prox2"
+
+GITREPO_SUBMODULE="https://github.com/Proximiant/server-code.git"
+GITREPO_SUBMODULE_ROOTDIR="$GITREPO_ROOTDIR/apps/old/repo"
+
+# BOOT2DOCKER_IP=$(boot2docker ip)
+BOOT2DOCKER_IP='192.168.59.103'
+
+PORT=8000
+
+SERVER_URL="http://$BOOT2DOCKER_IP:$PORT/"
+
+ETC_HOSTS_CONFIG="
+# Linc Docker Config
+$BOOT2DOCKER_IP lincdev
+$BOOT2DOCKER_IP ask.lincdev
+$BOOT2DOCKER_IP dev.lincdevs
+$BOOT2DOCKER_IP internal.lincdev
+$BOOT2DOCKER_IP care.lincdev
+$BOOT2DOCKER_IP pub-api.lincdev 
+$BOOT2DOCKER_IP public.lincdev
+$BOOT2DOCKER_IP turk2.lincdev
+"
