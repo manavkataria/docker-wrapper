@@ -1,0 +1,10 @@
+boot2docker up
+boot2docker shellinit
+docker pull mysql/mysql-server
+
+# Start Server | Volatile
+docker run --name my-container-name -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql/mysql-server
+
+# MySQL Client
+docker run -it --link my-container-name:mysql --rm mysql/mysql-server sh -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"3306" -uroot -p"my-secret-pw"'
+
