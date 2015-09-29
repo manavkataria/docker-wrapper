@@ -9,7 +9,7 @@
 # TODO: Fix run and make it Generic
 
 SCRIPT_VERSION="2.1.5"
-CONFIG_PATH="$HOME/.docvm-config"
+CONFIG_PATH="./.docvm-config"
 
 
 function version {
@@ -19,23 +19,29 @@ function version {
 
 function load_config {
 	print "Loading Config $CONFIG_PATH\n"
-	source $CONFIG_PATH || print "Fatal: Unable to Load Config!\n" exit 1
+	source $CONFIG_PATH || print "Fatal: Unable to Load Config!\n"
+
+	print "Config Variable BOOT2DOCKER_IP: 		$BOOT2DOCKER_IP \n"
+	print "Config Variable ETC_HOSTS_CONFIG: 	$ETC_HOSTS_CONFIG \n"
 }
 
 
 function bashinit {
 	print "Config $HOME/.bash_profile to enable docker commands\n"
 
-	echo "" >> $HOME/.bash_profile || print "Failed! \n" exit 1
-	echo "# Initialize Boot2Docker Shell Commands" >> $HOME/.bash_profile || print "Failed! \n" exit 1
+	echo "" >> $HOME/.bash_profile || exit 1
+	echo "# Initialize Boot2Docker Shell Commands" >> $HOME/.bash_profile || exit 1
 	echo "eval \$(boot2docker shellinit 2> /dev/null)" >> $HOME/.bash_profile && print "Done!\n"
 }
 
 
 function append-hosts {
-	print "TODO: Implement append-hosts \n" 
+	
 	print "Append /etc/hosts with the following domain mappings:\n"
+	printf "%s" "$ETC_HOSTS_CONFIG" >> /etc/hosts || exit 1
 
+	print "Updated /etc/hosts:"
+	cat /etc/hosts
 }
 
 
