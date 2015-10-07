@@ -303,7 +303,7 @@ function shell {
 		cd $1
 		print "Running Server ($PWD) ...\n"
 		docker run --name dev \
-			-v $PWD:/Proximiant/workspace \
+			-v $PWD:$CONTAINER_DIR/workspace \
 			-p 8000:8000 \
 			--expose 8000 \
 			-it $DOCKER_IMAGE \

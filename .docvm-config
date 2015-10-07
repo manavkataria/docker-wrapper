@@ -1,6 +1,6 @@
 HEADER="LINC"
 DOCKER_IMAGE="linc/django:devdb"
-CONTAINER_DIR="/Proximiant"
+CONTAINER_DIR="/linc"
 
 DEFAULTDIR="."
 B2DVERSION="1.7.1" 
