@@ -197,19 +197,20 @@ function install_boot2docker {
 }
 
 
-function run_boot2docker {
+function run_dockermachine {
 
-	b2d_status=$(boot2docker status 2> /dev/null) 
+	dm_status=$(docker-machine status default 2> /dev/null) 
 
-	if [ "$b2d_status" == "running" ]
+	if [ "$dm_status" == "Running" ]
 	then
-		print "Found: 'boot2docker' running\n"
+		print "Found: 'docker-machine' running\n"
 	else
-		print "Initializing boot2docker ...\n"
-		boot2docker init || exit 1
-		boot2docker up || exit 1
-		eval "$(boot2docker shellinit)" || exit 1
-		print "Done!\n"
+		print "Initializing docker-machine ...\n"
+		# dockermachine init || exit 1
+		# dockermachine up || exit 1
+		# eval "$(docker-machine shellinit)" || exit 1
+		# print "Done!\n"
+		print "Error! Not Implemented\n"
 	fi
 
 }
@@ -237,11 +238,22 @@ function init_boot2docker {
 
 	install_boot2docker	
 
-	run_boot2docker
+	run_dockermachine
 
 	return 1
 }
 
+
+function init_dockermachine {
+
+	# get_dockermachine
+
+	# install_dockermachine
+
+	run_dockermachine
+
+	return 1
+}
 
 function is_running {
 	echo $(docker ps | grep $DOCKER_IMAGE | wc -l)
@@ -361,7 +373,8 @@ function init {
 
 	gitclone "$@"
 
-	init_boot2docker
+	# init_boot2docker
+	init_dockermachine
 	init_docker
 
 	run "$@"
