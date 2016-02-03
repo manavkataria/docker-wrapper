@@ -16,7 +16,7 @@ DOCKER_MACHINE_IP='192.168.99.100'
 PORT=8000
 
 # SERVER_URL="http://$DOCKER_MACHINE_IP:$PORT/"
-SERVER_URL="http://recommendations.lincdev:$PORT/"
+SERVER_URL="http://recommendations.lincdev:$PORT/demo_page"
 
 ETC_HOSTS_CONFIG="
 # Linc Docker Config

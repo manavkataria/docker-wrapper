@@ -326,7 +326,9 @@ function uninstall {
 
 
 function what_next {
-	print "Access Server at URL: $SERVER_URL \n"
+	print "Login to Container using: lincvm shell"
+	print "execute command: runserver"
+	# print "Access Server at URL: $SERVER_URL \n"
 }
 
 
