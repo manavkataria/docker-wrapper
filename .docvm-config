@@ -10,10 +10,13 @@ GITREPO_ROOTDIR="prox2"
 GITREPO_SUBMODULE="https://github.com/Proximiant/server-code.git"
 GITREPO_SUBMODULE_ROOTDIR="$GITREPO_ROOTDIR/apps/old/repo"
 
+DOCKER_MACHINE_VERSION=0.5.3
+
 DOCKER_MACHINE_IP='192.168.99.100'
 PORT=8000
 
-SERVER_URL="http://$DOCKER_MACHINE_IP:$PORT/"
+# SERVER_URL="http://$DOCKER_MACHINE_IP:$PORT/"
+SERVER_URL="http://recommendations.lincdev:$PORT/"
 
 ETC_HOSTS_CONFIG="
 # Linc Docker Config

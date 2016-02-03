@@ -9,7 +9,7 @@
 # git clone recursive
 # TODO: Fix run and make it Generic
 
-SCRIPT_VERSION="2.6.5"
+SCRIPT_VERSION="3.0"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CONFIG_PATH=$DIR"/.docvm-config"
 
@@ -24,7 +24,7 @@ function load_config {
 	source $CONFIG_PATH || print "Fatal: Unable to Load Config!\n"
 
 	print "Found Variable DOCKER_MACHINE_IP: $DOCKER_MACHINE_IP \n"
-	print "Found Variable ETC_HOSTS_CONFIG:  $ETC_HOSTS_CONFIG \n"
+	print "Found Variable ETC_HOSTS_CONFIG. \n"
 }
 
 
@@ -87,11 +87,11 @@ function usage {
 	echo "Usage: $0 [options]"
 	echo "    NO_OPTION    Setup linc environment in current directory <$GITREPO_ROOTDIR.git>"
 	echo "    help         Display this usage information"
-	echo "    kill         Stop and remove 'dev' container"
-	echo "    run          Run linc's django server"
 	echo "    shell        Open interactive shell on 'dev' container"
+	echo "    runserver    Run linc's django server"
+	echo "    kill         Stop and remove 'dev' container"
 	echo "    bashinit     Setup $HOME/.bash_profile to enable docker commands"
-	echo "    uninstall    Uninstall 'boot2docker' and 'docker'"
+	# echo "    uninstall    Uninstall 'docker-machine' and 'docker'"
 	echo "    version      Display script version"
 	exit 1
 }
@@ -170,9 +170,24 @@ function gitclone {
 }
 
 
+function install_dockermachine {
+
+	if [ ! -f "/usr/local/bin/docker-machine" ]
+	then
+		print "Downloading docker-machine v$DOCKER_MACHINE_VERSION ... \n"
+		curl -L https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine || exit 1
+	    chmod +x /usr/local/bin/docker-machine
+	    docker-machine create --driver virtualbox default
+		print "Done!\n"
+	else
+		print "Found: /usr/local/bin/docker-machine\n"
+	fi
+}
+
+
 function run_dockermachine {
 
-	dm_status=$(docker-machine status default 2> /dev/null) 
+	dm_status="$(docker-machine status default 2>&1)"
 
 	if [ "$dm_status" == "Running" ]
 	then
@@ -195,8 +210,14 @@ function init_docker {
 		print "Found: '$DOCKER_IMAGE' image\n"
 	else
 		print "Fetching '$DOCKER_IMAGE' docker image ... \n"
-		echo -n "Docker "
-		docker login
+		# echo -n "Docker "
+
+		# is_user_logged_in
+		if [ ! -f "$HOME/.docker/config.json" ]
+		then
+			docker login
+		fi
+
 		docker pull $DOCKER_IMAGE || exit 1
 		print "Done!\n"
 	fi
@@ -218,9 +239,7 @@ function init_boot2docker {
 
 function init_dockermachine {
 
-	# get_dockermachine
-	# install_dockermachine
-
+	install_dockermachine
 	run_dockermachine
 
 	return 1
@@ -248,7 +267,7 @@ function is_stopped {
 }
 
 
-function run {
+function runserver {
 	
 	if [ $(is_running) -eq 1 ]
 	then 
@@ -267,7 +286,7 @@ function run {
 			-p 8000:8000 \
 			--expose 8000 \
 			-itd $DOCKER_IMAGE \
-			#/bin/bash -c 'source /Proximiant/env/docker-entrypoint.sh && cd /Proximiant/workspace/$GITREPO_ROOTDIR/apps && python /Proximiant/workspace/$GITREPO_ROOTDIR/apps/manage.py runserver 0.0.0.0:8000 &>> /Proximiant/workspace/django.log'
+			# /bin/bash -c 'source /linc/env/docker-entrypoint.sh && cd /linc/workspace/$GITREPO_ROOTDIR/apps && python /linc/workspace/$GITREPO_ROOTDIR/apps/manage.py runserver 0.0.0.0:8000 &>> /linc/workspace/django.log'
 			print "Done!\n"
 	fi
 }
@@ -277,21 +296,14 @@ function shell {
 	
 	if [ $(is_running) -eq 1 ]
 	then 
-		print "Found: Server Running\n"
+		attach
 	elif [ $(is_stopped) -eq 1 ]; then
 		print "Restarting Server ...\n"
 		start && attach
 		print "Done!\n"
 	else
-		# Rerun Server
-		cd $1
-		print "Running Server ($PWD) ...\n"
-		docker run --name dev \
-			-v $PWD:$CONTAINER_DIR/workspace \
-			-p 8000:8000 \
-			--expose 8000 \
-			-it $DOCKER_IMAGE \
-			/bin/bash
+		# Server not running
+		print "ERROR: Dev Server Not Running!\n" && exit 1
 	fi
 }
 
@@ -324,6 +336,8 @@ function start {
 }
 
 function attach {
+	print "Attaching to Server ... \n"
+	print "(press return to see prompt)\n"
 	docker attach dev
 }
 
@@ -350,11 +364,9 @@ function init {
 	init_dockermachine
 	init_docker
 
-	run "$@"
-
-	print "Initialization Complete! \n"
-
-	what_next
+	runserver "$@" && \
+	print "Initialization Complete! \n" && \
+	what_next || exit 1
 
 	exit 0
 }
@@ -363,7 +375,7 @@ function init {
 function shellinit-volatile {
 	if hash docker-machine 2>/dev/null
 	then
-		eval "$(docker-machine env default) 2>/dev/null)" || \
+		eval "$(docker-machine env default) 2>/dev/null" || \
 		print "WARN: 'docker-machine' environ init Failed! \n"
 	else
 		print "INFO: 'docker-machine' Not Found! \n"
