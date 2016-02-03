@@ -24,7 +24,7 @@ function load_config {
 	source $CONFIG_PATH || print "Fatal: Unable to Load Config!\n"
 
 	print "Found Variable DOCKER_MACHINE_IP: $DOCKER_MACHINE_IP \n"
-	print "Found Variable ETC_HOSTS_CONFIG. \n"
+	# print "Found Variable ETC_HOSTS_CONFIG. \n"
 }
 
 
@@ -88,7 +88,7 @@ function usage {
 	echo "    NO_OPTION    Setup linc environment in current directory <$GITREPO_ROOTDIR.git>"
 	echo "    help         Display this usage information"
 	echo "    shell        Open interactive shell on 'dev' container"
-	echo "    runserver    Run linc's django server"
+	# echo "    runserver    Run linc's django server"
 	echo "    kill         Stop and remove 'dev' container"
 	echo "    bashinit     Setup $HOME/.bash_profile to enable docker commands"
 	# echo "    uninstall    Uninstall 'docker-machine' and 'docker'"
